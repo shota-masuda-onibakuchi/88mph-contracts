@@ -15,6 +15,7 @@ import {
 import {CreamERC20Market} from "./moneymarkets/cream/CreamERC20Market.sol";
 import {HarvestMarket} from "./moneymarkets/harvest/HarvestMarket.sol";
 import {YVaultMarket} from "./moneymarkets/yvault/YVaultMarket.sol";
+import {IdleMarket} from "./moneymarkets/idle/IdleMarket.sol";
 import {DInterest} from "./DInterest.sol";
 import {DInterestWithDepositFee} from "./DInterestWithDepositFee.sol";
 
@@ -256,6 +257,23 @@ contract Factory {
         clone.transferOwnership(msg.sender);
 
         emit CreateClone("YVaultMarket", template, salt, address(clone));
+        return clone;
+    }
+
+    function createIdleMarket(
+        address template,
+        bytes32 salt,
+        address _idleToken,
+        address _rescuer,
+        address _stablecoin
+    ) external returns (IdleMarket) {
+        IdleMarket clone = IdleMarket(template.cloneDeterministic(salt));
+
+        // initialize
+        clone.initialize(_idleToken, _rescuer, _stablecoin, address(this));
+        clone.transferOwnership(msg.sender);
+
+        emit CreateClone("IdleMarket", template, salt, address(clone));
         return clone;
     }
 
