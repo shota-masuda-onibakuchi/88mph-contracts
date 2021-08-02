@@ -17,12 +17,16 @@ contract IdleMarket is MoneyMarket {
 
     IIdleToken public idleToken;
     ERC20 public override stablecoin;
+    ERC20 public govToken;
+    address public rewards;
     address public referral;
 
     function initialize(
         address _idleToken,
         address _rescuer,
         address _stablecoin,
+        address _govToken,
+        address _rewards,
         address _referral
     ) external initializer {
         __MoneyMarket_init(_rescuer);
@@ -35,6 +39,8 @@ contract IdleMarket is MoneyMarket {
 
         idleToken = IIdleToken(_idleToken);
         stablecoin = ERC20(_stablecoin);
+        govToken = ERC20(_govToken);
+        rewards = _rewards;
         referral = _referral;
     }
 
@@ -78,6 +84,7 @@ contract IdleMarket is MoneyMarket {
     function claimRewards() external override {
         // amount = 0 means claiming only rewards
         idleToken.redeemIdleToken(0);
+        govToken.safeTransfer(rewards, govToken.balanceOf(address(this)));
     }
 
     function totalValue() external view override returns (uint256) {

@@ -264,13 +264,22 @@ contract Factory {
         address template,
         bytes32 salt,
         address _idleToken,
+        address _govToken,
+        address _rewards,
         address _rescuer,
         address _stablecoin
     ) external returns (IdleMarket) {
         IdleMarket clone = IdleMarket(template.cloneDeterministic(salt));
 
         // initialize
-        clone.initialize(_idleToken, _rescuer, _stablecoin, address(this));
+        clone.initialize(
+            _idleToken,
+            _rescuer,
+            _stablecoin,
+            _govToken,
+            _rewards,
+            address(this)
+        );
         clone.transferOwnership(msg.sender);
 
         emit CreateClone("IdleMarket", template, salt, address(clone));

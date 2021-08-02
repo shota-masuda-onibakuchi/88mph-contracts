@@ -550,6 +550,59 @@ const yvaultMoneyMarketModule = () => {
   };
 };
 
+const idleMoneyMarketModule = () => {
+  // Contract artifacts
+  const IdleMock = artifacts.require("IdleMock");
+  const IdleMarket = artifacts.require("IdleMarket");
+
+  let idleToken;
+  let govToken;
+  let stablecoin;
+  const idleTokenAddressList = [];
+  const INIT_INTEREST_RATE = 0.1; // 10% APY
+
+  const deployMoneyMarket = async (accounts, factory, _stablecoin, rewards) => {
+    // Deploy mock contracts
+    stablecoin = _stablecoin;
+    idleToken = await IdleMock.new(stablecoin.address);
+    govToken = await ERC20Mock.new();
+    if (!idleTokenAddressList.includes(idleToken.address)) {
+      idleTokenAddressList.push(idleToken.address);
+    }
+
+    // Initialize the money market
+    const marketTemplate = await IdleMarket.new();
+    const marketReceipt = await factory.createIdleMarket(
+      marketTemplate.address,
+      DEFAULT_SALT,
+      idleToken.address,
+      govToken.address,
+      rewards,
+      accounts[0],
+      stablecoin.address
+    );
+    return await factoryReceiptToContract(marketReceipt, IdleMarket);
+  };
+
+  const timePass = async timeInYears => {
+    await timeTravel(timeInYears * YEAR_IN_SEC);
+    for (const vaultAddress of idleTokenAddressList) {
+      const vault = await IdleMock.at(vaultAddress);
+      const mintAmount = BigNumber(await stablecoin.balanceOf(vault.address))
+        .times(INIT_INTEREST_RATE)
+        .times(timeInYears);
+      if (mintAmount.gt(0)) {
+        await stablecoin.mint(vault.address, num2str(mintAmount));
+      }
+    }
+  };
+
+  return {
+    deployMoneyMarket,
+    timePass
+  };
+};
+
 const moneyMarketModuleList = (module.exports.moneyMarketModuleList = [
   {
     name: "Aave",
@@ -574,6 +627,10 @@ const moneyMarketModuleList = (module.exports.moneyMarketModuleList = [
   {
     name: "YVault",
     moduleGenerator: yvaultMoneyMarketModule
+  },
+  {
+    name: "Idle",
+    moduleGenerator: idleMoneyMarketModule
   }
 ]);
 
