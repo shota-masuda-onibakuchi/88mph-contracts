@@ -15,9 +15,13 @@ contract IdleMarket is MoneyMarket {
     using SafeERC20 for ERC20;
     using AddressUpgradeable for address;
 
+    /// @dev idleUSD token
     IIdleToken public idleToken;
+    /// @dev underlying stable coin
     ERC20 public override stablecoin;
+    /// @dev idle protocol governance token
     ERC20 public govToken;
+
     address public rewards;
     address public referral;
 
@@ -33,7 +37,9 @@ contract IdleMarket is MoneyMarket {
 
         // Verify input addresses
         require(
-            _idleToken.isContract() && _stablecoin.isContract(),
+            _idleToken.isContract() &&
+                _stablecoin.isContract() &&
+                _govToken.isContract(),
             "IdleMarket: An input address is not a contract"
         );
 
@@ -82,8 +88,7 @@ contract IdleMarket is MoneyMarket {
     }
 
     function claimRewards() external override {
-        // amount = 0 means claiming only rewards
-        idleToken.redeemIdleToken(0);
+        idleToken.redeemIdleToken(0); // amount=0 means claiming only rewards
         govToken.safeTransfer(rewards, govToken.balanceOf(address(this)));
     }
 
